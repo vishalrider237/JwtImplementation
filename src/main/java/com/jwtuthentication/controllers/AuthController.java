@@ -1,9 +1,12 @@
 package com.jwtuthentication.controllers;
 
+import com.jwtuthentication.entity.RefreshToken;
 import com.jwtuthentication.entity.User;
 import com.jwtuthentication.models.JWTRequest;
 import com.jwtuthentication.models.JWTResponse;
+import com.jwtuthentication.models.RefreshTokenRequest;
 import com.jwtuthentication.security.JWTHelper;
+import com.jwtuthentication.service.RefreshTokenService;
 import com.jwtuthentication.service.UserService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,6 +34,8 @@ public class AuthController {
     private JWTHelper helper;
     @Autowired
     private UserService userService;
+    @Autowired
+    private RefreshTokenService refreshTokenService;
     private Logger logger = LoggerFactory.getLogger(AuthController.class);
 
 
@@ -42,9 +47,11 @@ public class AuthController {
 
         UserDetails userDetails = this.userDetailsService.loadUserByUsername(request.getEmail());
         String token = this.helper.generateToken(userDetails);
+        RefreshToken refreshToken = this.refreshTokenService.createRefreshToken(userDetails.getUsername());
 
         JWTResponse response = JWTResponse.builder()
                 .JwtToken(token)
+                .refreshToken(refreshToken.getRefreshToken())
                 .username(userDetails.getUsername()).build();
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
@@ -60,6 +67,17 @@ public class AuthController {
             throw new BadCredentialsException(" Invalid Username or Password  !!");
         }
 
+    }
+
+    // generating JWT token from our old refresh token
+    @PostMapping("/refresh")
+    public  JWTResponse RereshJwtToken(@RequestBody RefreshTokenRequest request){
+      RefreshToken refreshToken=  this.refreshTokenService.verifyRefreshToken(request.getRefreshToken());
+   User user= refreshToken.getUser();
+      String token=   this.helper.generateToken(user);
+      return JWTResponse.builder().refreshToken(refreshToken.getRefreshToken())
+              .username(user.getUsername())
+              .JwtToken(token).build();
     }
 
     @ExceptionHandler(BadCredentialsException.class)

@@ -1,7 +1,9 @@
 package com.jwtuthentication.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
+import jakarta.persistence.OneToOne;
 import lombok.*;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -21,7 +23,9 @@ public class User implements UserDetails {
     private String email;
     private String password;
     private String about;
-
+    @OneToOne(mappedBy = "user")
+    @JsonIgnore
+  private RefreshToken refreshToken;
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return null;
@@ -50,5 +54,13 @@ public class User implements UserDetails {
     @Override
     public boolean isEnabled() {
         return true;
+    }
+
+    public RefreshToken getRefreshToken() {
+        return refreshToken;
+    }
+
+    public void setRefreshToken(RefreshToken refreshToken) {
+        this.refreshToken = refreshToken;
     }
 }

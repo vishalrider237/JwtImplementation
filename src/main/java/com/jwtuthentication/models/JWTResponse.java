@@ -10,5 +10,6 @@ import lombok.*;
 @ToString
 public class JWTResponse {
     private String JwtToken;
+    private String refreshToken;
     private String username;
 }
